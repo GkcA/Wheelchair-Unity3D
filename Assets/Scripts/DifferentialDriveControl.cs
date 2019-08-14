@@ -2,11 +2,11 @@
 
 public class DifferentialDriveControl : MonoBehaviour
 {
-    public float R=0;
+    public float R = 0;
     public float L = 0.7f;
 
     public Rigidbody m_Rigidbody;
-  
+
     public float V_L = 0;
     public float V_R = 0;
 
@@ -16,14 +16,24 @@ public class DifferentialDriveControl : MonoBehaviour
 
     private float drivingTime;
 
+    public Transform frontRightWheel;
+    public Transform frontLeftWheel;
+
+    public Transform casterRightWheel;
+    public Transform casterLeftWheel;
+
+    public Transform casterLeftWheelMain;
+
     private void Start()
     {
-        x = gameObject.transform.position.x;
-        y = gameObject.transform.position.y;
+        x = gameObject.transform.localPosition.x;
+        y = gameObject.transform.localPosition.y;
         theta = Mathf.PI / 2;
 
         drivingTime = 1f;
     }
+
+    float abc = 0;
 
     private void Update()
     {
@@ -31,22 +41,34 @@ public class DifferentialDriveControl : MonoBehaviour
         {
             V_L = 0.2f;
             V_R = 0.1f;
+            abc = transform.rotation.y;
         }
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
             V_L = 0.1f;
             V_R = 0.2f;
+
         }
         else if (Input.GetKey(KeyCode.UpArrow))
         {
             V_L = 0.2f;
             V_R = 0.2f;
+
+            abc = 0f;
+
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
             V_L = -0.2f;
             V_R = -0.2f;
         }
+
+        frontRightWheel.transform.Rotate(-V_R / 0.1407802f * Time.deltaTime * 100f, 0f, 0f);
+        frontLeftWheel.transform.Rotate(V_L / 0.1407802f * Time.deltaTime * 100f, 0f, 0f);
+
+        casterRightWheel.transform.Rotate(-V_R / 0.1407802f * Time.deltaTime * 100f, 0f, 0f);
+        casterLeftWheel.transform.Rotate(-V_R / 0.1407802f * Time.deltaTime * 100f, 0f, 0f);
+
     }
 
     private void FixedUpdate()
@@ -66,16 +88,31 @@ public class DifferentialDriveControl : MonoBehaviour
 
     private void Move()
     {
-        Vector3 movement = new Vector3(x,gameObject.transform.position.y, y);
+        Vector3 movement = new Vector3(x, gameObject.transform.localPosition.y, y);
         m_Rigidbody.MovePosition(movement);
     }
 
     private void Turn()
     {
         float theta_deg = -Mathf.Rad2Deg * theta + 90f;
+
         Quaternion rotate = Quaternion.Euler(0f, theta_deg, 0f);
         m_Rigidbody.MoveRotation(rotate);
-        
+
+        //if (casterLeftWheelMain.transform.localEulerAngles.y >= 90f && casterLeftWheelMain.transform.localEulerAngles.y <= 270f)
+        //{
+        //    casterLeftWheelMain.transform.rotation = Quaternion.Slerp(casterLeftWheelMain.transform.rotation, Quaternion.Euler(0f, 0f, 0f), Time.deltaTime * 5f);
+
+        //}
+        //else
+        //{
+
+        //    casterLeftWheelMain.transform.rotation = Quaternion.Slerp(casterLeftWheelMain.transform.rotation, Quaternion.Euler(0f, -theta_deg, 0f), Time.deltaTime * 5f);
+        //}
+
+
+        //Debug.LogWarning("Position: " + (casterLeftWheelMain.transform.localEulerAngles.y ));
+        //Debug.LogWarning("Theta: " + (rotate.eulerAngles.y ));
     }
 
     /**
@@ -96,7 +133,7 @@ public class DifferentialDriveControl : MonoBehaviour
             theta_n = theta;
             x_n = x + v_l * t * Mathf.Cos(theta);
             y_n = y + v_l * t * Mathf.Sin(theta);
-           
+
         }
         else  // Circular motion
         {
